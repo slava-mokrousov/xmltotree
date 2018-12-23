@@ -1,0 +1,29 @@
+buildscript {
+    repositories {
+	jcenter()
+	mavenCentral()
+    }
+    dependencies {
+        classpath 'com.bmuschko:gradle-docker-plugin:4.1.0'
+    }
+}
+
+apply plugin: 'com.bmuschko.docker-remote-api'
+
+import com.bmuschko.gradle.docker.tasks.image.*
+
+task createDockerfile(type: Dockerfile) {
+    destFile = project.file('./Dockerfile')
+    from 'python:alpine3.8'
+    runCommand 'pip install flask'
+    addFile('./app', '/app')
+    workingDir('/app')
+    exposePort 80
+    defaultCommand('python3','app.py')  
+}
+
+task buildImage(type: DockerBuildImage) {
+    dependsOn createDockerfile
+    inputDir = createDockerfile.destFile.get().asFile.parentFile
+    tag = 'xml2tree:latest'
+}
